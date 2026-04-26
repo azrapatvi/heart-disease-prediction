@@ -1,14 +1,7 @@
 # 🫀 Heart Disease Prediction App
 
-A machine learning web app that predicts whether a person has heart disease or not — based on clinical data. Built with **Python**, **Scikit-learn**, and **Streamlit**.
+A machine learning web app that predicts whether a person has heart disease — using **two models**: Logistic Regression and a Deep Learning ANN. Built with **Python**, **Scikit-learn**, **TensorFlow/Keras**, and **Streamlit**.
 
----
-
-## 📁 Recommended Repository Name
-
-```
-heart-disease-prediction
-```
 
 ---
 
@@ -17,22 +10,23 @@ heart-disease-prediction
 ```
 heart-disease-prediction/
 │
-├── heart_disease_prediction.ipynb   ← Jupyter notebook (data analysis + model training)
-├── app.py                           ← Streamlit web app (the UI)
-├── heart_model.pkl                  ← Saved trained model + scaler
-├── heart.csv                        ← Dataset used for training
-├── requirements.txt                 ← All Python libraries needed
+├── heart_disease_prediction.ipynb   ← Jupyter notebook (EDA + model training)
+├── ann_heart_disease_prediction.ipynb               ← ANN model training notebook
+├── main.py                           ← Streamlit web app (UI)
+├── heart_model.pkl                  ← Saved Logistic Regression model + scaler
+├── ann_model.h5                     ← Saved ANN (Keras) model 
+├── requirements.txt                 ← All libraries needed
 └── README.md                        ← This file
 ```
 
 ---
 
-## 🤔 What Does This Project Do?
+## 🤔 What Does This App Do?
 
-1. **Takes patient health info** as input (age, blood pressure, heart rate, etc.)
-2. **Runs it through a trained ML model**
-3. **Predicts** whether the patient has heart disease or not
-4. **Shows a probability chart** (pie chart) of the risk
+1. User fills in **patient health details** (age, blood pressure, heart rate, etc.)
+2. User **selects a model** — Logistic Regression or ANN
+3. App **predicts** if the patient has heart disease or not
+4. App shows a **probability pie chart** of the risk
 
 ---
 
@@ -40,7 +34,8 @@ heart-disease-prediction/
 
 - **File:** `heart.csv`
 - **Source:** [Kaggle - Heart Disease Dataset](https://www.kaggle.com/datasets/johnsmith88/heart-disease-dataset)
-- **Total columns used for training:** 11 (2 columns `chol` and `fbs` were dropped after correlation analysis)
+- **Columns dropped:** `chol` and `fbs` — removed after correlation analysis (low correlation with target)
+- **Final features used for training:** 11 columns
 
 | Column | What it means |
 |---|---|
@@ -59,51 +54,57 @@ heart-disease-prediction/
 
 ---
 
-## 🧠 How the Model Was Built (Inside the Notebook)
+## 🧠 How the Models Were Built
 
-### Step 1 — Load & Explore Data
+### ── Common Steps (done for both models) ──
+
+**Step 1 — Load & Explore Data**
 - Loaded `heart.csv` using Pandas
-- Checked shape, info, missing values, and duplicates
-- Found **no missing values**, removed duplicate rows
+- Checked shape, info, missing values, duplicates
+- No missing values found; duplicate rows removed
 
-### Step 2 — Feature Selection
-- Plotted a **correlation heatmap** using Seaborn
-- Dropped `chol` (cholesterol) and `fbs` (fasting blood sugar) — they had very low correlation with the target
+**Step 2 — Feature Selection**
+- Plotted a correlation heatmap using Seaborn
+- Dropped `chol` and `fbs` — very low correlation with target
 
-### Step 3 — Train/Test Split
-- Split data: **80% training, 20% testing**
-- Used `random_state=42` for reproducibility
+**Step 3 — Train/Test Split**
+- 80% training, 20% testing
+- `random_state=42` for reproducibility
 
-### Step 4 — Scaling
-- Applied **StandardScaler** to normalize the feature values
-- Fit the scaler **only on training data** (to avoid data leakage)
+**Step 4 — Scaling**
+- Used `StandardScaler` to normalize features
+- Scaler fitted **only on training data** (prevents data leakage)
 
-### Step 5 — Tried 5 Models
-Compared these models before choosing the best:
+---
+
+### 🔵 Model 1 — Logistic Regression
+
+**Step 5 — Tried 5 Models**
+
+Compared all of these before picking the best:
 - Logistic Regression
 - Random Forest Classifier
 - Decision Tree Classifier
 - AdaBoost Classifier
 - Gradient Boosting Classifier
 
-Evaluated each using: **Accuracy, F1 Score, Precision, Recall, ROC AUC**
+Each model was evaluated using: Accuracy, F1 Score, Precision, Recall, ROC AUC
 
-### Step 6 — Hyperparameter Tuning (GridSearchCV)
-Fine-tuned the top 3 models:
+**Step 6 — Hyperparameter Tuning (GridSearchCV)**
+
+Top 3 models were fine-tuned using GridSearchCV with 3-fold cross-validation:
 - Logistic Regression
 - Random Forest Classifier
 - Gradient Boosting Classifier
 
-Used **3-fold cross-validation** during tuning.
+**Step 7 — Final Model**
 
-### Step 7 — Final Model Selected
-**Logistic Regression** was chosen as the final model with these best params:
+**Logistic Regression** was selected as the final model with best params:
 ```
 C=0.01, penalty='l2', solver='lbfgs'
 ```
 
-### Step 8 — Save the Model
-Saved both the **trained model + scaler** together in one file using `joblib`:
+**Step 8 — Save**
 ```python
 model_data = {"model": final_model, "scaler": scaler}
 joblib.dump(model_data, "heart_model.pkl")
@@ -111,38 +112,53 @@ joblib.dump(model_data, "heart_model.pkl")
 
 ---
 
-## 🖥️ How to Run the App
+### 🟢 Model 2 — ANN (Artificial Neural Network)
 
-### Step 1 — Clone the Repository
-```bash
-git clone https://github.com/your-username/heart-disease-prediction.git
-cd heart-disease-prediction
+**Step 5 — ANN Architecture**
+
+Built using TensorFlow/Keras with the following layers:
+
+| Layer | Neurons | Activation | Dropout |
+|---|---|---|---|
+| Input | 11 features | — | — |
+| Dense 1 | 128 | ReLU | 0.3 |
+| Dense 2 | 64 | ReLU | 0.2 |
+| Dense 3 | 32 | ReLU | 0.2 |
+| Dense 4 | 16 | ReLU | 0.1 |
+| Output | 1 | Sigmoid | — |
+
+> **Dropout** layers are added after each Dense layer to prevent overfitting — they randomly turn off some neurons during training so the model doesn't memorize the data.
+
+**Step 6 — Compile**
+```python
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 ```
 
-### Step 2 — Install the Required Libraries
-```bash
-pip install -r requirements.txt
+**Step 7 — Training with Early Stopping**
+```python
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+model.fit(X_train_scaled, y_train, validation_data=(X_test_scaled, y_test),
+          epochs=150, callbacks=[early_stopping])
 ```
 
-### Step 3 — Make Sure `heart_model.pkl` is Present
-The `.pkl` file must be in the same folder as `app.py`. If it's missing, run the notebook first to generate it.
+> **Early Stopping** means: if the model stops improving for 5 epochs in a row, training stops automatically and the best weights are restored. This saves time and prevents overfitting.
 
-### Step 4 — Run the App
-```bash
-streamlit run app.py
+**Step 8 — Prediction**
+```python
+y_pred = model.predict(X_test_scaled)
+y_pred_class = (y_pred > 0.5).astype(int)   # threshold: >0.5 = Disease
 ```
 
-### Step 5 — Open in Browser
-Streamlit will automatically open the app. If it doesn't, go to:
-```
-http://localhost:8501
+**Step 9 — Save**
+```python
+model.save("ann_model.h5")
 ```
 
 ---
 
 ## 📦 Requirements
 
-Create a `requirements.txt` file with:
+Add this to your `requirements.txt`:
 
 ```
 streamlit
@@ -152,31 +168,31 @@ scikit-learn
 matplotlib
 joblib
 seaborn
+tensorflow
 ```
 
-Install all at once:
-```bash
-pip install -r requirements.txt
-```
 
 ---
 
 ## 🎯 How to Use the App
 
 1. Open the app in your browser
-2. Fill in the patient details on the left and right panels:
-   - Age, Sex, Chest Pain Type, Blood Pressure, ECG, etc.
-3. Click **"Run Assessment"**
-4. The app will show:
+2. **Select a model** from the dropdown at the top:
+   - 🔵 Logistic Regression — simple and fast
+   - 🟢 ANN — deep learning, more complex
+3. Fill in the patient details (age, sex, chest pain, blood pressure, etc.)
+4. Click **"Run Assessment"**
+5. The app shows:
    - ✅ **No Heart Disease** — in green
    - ⚠️ **Heart Disease Detected** — in red
-   - A **pie chart** showing probability of each outcome
+   - Which model was used for the prediction
+   - A **pie chart** showing the probability breakdown
 
 ---
 
-## 📈 Model Performance (After Tuning)
+## 📈 Model Performance
 
-> Final model: **Logistic Regression**
+### 🔵 Logistic Regression (after tuning)
 
 | Metric | Training | Testing |
 |---|---|---|
@@ -186,7 +202,20 @@ pip install -r requirements.txt
 | Recall | ~86% | ~85% |
 | ROC AUC | ~85% | ~84% |
 
-*(Exact values may vary slightly based on your environment)*
+### 🟢 ANN (Neural Network)
+
+| Metric | Value |
+|---|---|
+| Optimizer | Adam |
+| Loss Function | Binary Crossentropy |
+| Total Epochs Run | 13 (Early Stopping triggered) |
+| Best Epoch | 8 |
+| Training Accuracy (Best Epoch) | ~83.06% |
+| Validation Accuracy | ~88.52% |
+| Best Validation Loss | 0.3549 |
+| Threshold | 0.5 (above = Heart Disease) |
+
+> Early Stopping triggered at Epoch 13 (patience=5). Best weights were restored from **Epoch 8**, which achieved the lowest validation loss of **0.3549** and a validation accuracy of **88.52%**.
 
 ---
 
@@ -195,5 +224,3 @@ pip install -r requirements.txt
 > This app is for **educational and reference purposes only**.
 > It is **not** a substitute for professional medical advice.
 > Always consult a certified doctor or cardiologist for health decisions.
-
----
